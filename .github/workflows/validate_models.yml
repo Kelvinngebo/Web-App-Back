@@ -1,0 +1,37 @@
+name: Validate model artifacts
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install requirements (if present)
+        run: |
+          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt || true; fi
+
+      - name: Run validation script
+        run: |
+          python backend/scripts/validate_models.py | tee validate_models_run.txt
+
+      - name: Upload validation logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: validate-model-output
+          path: |
+            validate_models_run.txt
+            backend/scripts/results/validate_models_output.txt
